@@ -1,13 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Upload } from 'lucide-react';
+
+// Define the Product interface
+export interface Product {
+  id?: string;
+  name: string;
+  description: string;
+  price: number;
+  image?: string; // This will hold the image URL or file name once uploaded
+  category: string;
+  ingredients: string;
+  calories: string;
+  protein: string;
+  carbs: string;
+  fat: string;
+}
 
 export default function AdminAddProduct() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: '',
+    price: 0,
     category: 'beef',
     image: null as File | null,
     ingredients: '',
@@ -33,12 +49,41 @@ export default function AdminAddProduct() {
       }));
     }
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
-    navigate('/admin/products');
+
+    // Create FormData object
+    const productFormData = new FormData();
+    productFormData.append('name', formData.name);
+    productFormData.append('description', formData.description);
+    productFormData.append('price', formData.price.toString());
+    productFormData.append('category', formData.category);
+    productFormData.append('ingredients', formData.ingredients);
+    productFormData.append('calories', formData.calories);
+    productFormData.append('protein', formData.protein);
+    productFormData.append('carbs', formData.carbs);
+    productFormData.append('fat', formData.fat);
+    
+    // Append the image file if it's present
+    if (formData.image) {
+      productFormData.append('image', formData.image);
+    }
+
+    try {
+      // Send the form data to the backend API (Replace URL with your API endpoint)
+      const response = await axios.post('http://localhost:5000/api/v1/products', productFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${localStorage.getItem('token')}`, // Add token if needed
+        }
+      });
+
+      console.log('Product created successfully:', response.data);
+      // navigate('/admin/products'); // Redirect to the product list after successful creation
+    } catch (error) {
+      console.error('Error creating product:', error);
+      // You can display an error message here
+    }
   };
 
   return (
