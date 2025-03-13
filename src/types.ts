@@ -1,11 +1,17 @@
 export interface Product {
+  _id:string;
   id: string;
   name: string;
   description: string;
   price: number;
   image: string;
   category: string;
-  stock: 'In Stock'
+  stock?: 'In Stock';
+  ingredients: string,
+  calories: string,
+  protein: string,
+  carbs: string,
+  fat: string
 }
 
 export interface CartItem {

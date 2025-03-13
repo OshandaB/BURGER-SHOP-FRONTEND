@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Upload } from 'lucide-react';
 
@@ -20,6 +20,9 @@ export interface Product {
 
 export default function AdminAddProduct() {
   const navigate = useNavigate();
+    const { id } = useParams();
+    const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -32,7 +35,20 @@ export default function AdminAddProduct() {
     carbs: '',
     fat: ''
   });
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/v1/products/${id}`);
+        if (!response.ok) throw new Error('Product not found');
+        const data = await response.json();
+        setFormData(data);
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      }
+    };
 
+    fetchProduct();
+  }, [id]);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -70,27 +86,37 @@ export default function AdminAddProduct() {
     }
 
     try {
-      // Send the form data to the backend API (Replace URL with your API endpoint)
-      const response = await axios.post('http://localhost:5000/api/v1/products', productFormData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${localStorage.getItem('token')}`, // Add token if needed
-        }
-      });
+      if (id) {
+        // Update existing product
+        await axios.put(`http://localhost:5000/api/v1/products/${id}`, productFormData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+      } else {
+        // Create new product
+        await axios.post('http://localhost:5000/api/v1/products', productFormData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+      }
 
-      console.log('Product created successfully:', response.data);
-      // navigate('/admin/products'); // Redirect to the product list after successful creation
+      // navigate('/admin/products');
     } catch (error) {
-      console.error('Error creating product:', error);
-      // You can display an error message here
+      console.error('Error saving product:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Add New Product</h1>
-        <p className="mt-2 text-sm text-gray-600">
+      <h1 className="text-3xl font-bold text-gray-900">{id ? 'Edit Product' : 'Add New Product'}</h1>
+      <p className="mt-2 text-sm text-gray-600">
           Add a new product to your burger shop menu.
         </p>
       </div>
@@ -269,8 +295,8 @@ export default function AdminAddProduct() {
             type="submit"
             className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
           >
-            Create Product
-          </button>
+            {loading ? 'Saving...' : id ? 'Update Product' : 'Create Product'}
+            </button>
         </div>
       </form>
     </div>

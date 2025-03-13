@@ -26,12 +26,14 @@ interface AuthState {
 export const useStore = create<Store>((set) => {
   const storedToken = localStorage.getItem('token');
 const storedEmail = localStorage.getItem('email');
-
+const storedUser = localStorage.getItem('user')
+    ? JSON.parse(localStorage.getItem('user')!)
+    : null; // Convert back to object
 // If token exists in localStorage, consider the user as authenticated
 const isAuthenticated = storedToken && storedEmail ? true : false;
 return{
   cart: [],
-  user: null,
+  user: storedUser,
   isAuthModalOpen: false,
   addToCart: (product) =>
     set((state) => {
@@ -58,7 +60,15 @@ return{
       ),
     })),
   clearCart: () => set({ cart: [] }),
-  setUser: (user) => set({ user }),
+  setUser: (user) => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user)); // Convert user to a string
+    } else {
+      localStorage.removeItem('user'); // Remove from storage if null
+    }
+    set({ user });
+  },
+  
   
   setAuthModalOpen: (isOpen) => set({ isAuthModalOpen: isOpen }),
   isAuthenticated:   isAuthenticated  ,

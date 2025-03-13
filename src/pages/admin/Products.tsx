@@ -1,38 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Edit, Trash2 } from 'lucide-react';
-
-const products = [
-  {
-    id: '1',
-    name: 'Classic Cheeseburger',
-    price: 9.99,
-    category: 'Beef',
-    status: 'Active',
-    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80'
-  },
-  {
-    id: '2',
-    name: 'Bacon Deluxe',
-    price: 12.99,
-    category: 'Beef',
-    status: 'Active',
-    image: 'https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&q=80'
-  },
-  {
-    id: '3',
-    name: 'Mushroom Swiss',
-    price: 11.99,
-    category: 'Beef',
-    status: 'Inactive',
-    image: 'https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?auto=format&fit=crop&q=80'
-  }
-];
+import { Product } from '../../types';
 
 export default function AdminProducts() {
-  const handleDelete = (id: string) => {
-    // Handle product deletion
-    console.log('Delete product:', id);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/v1/products'); // Change to your API URL
+      const data = await response.json();
+      setProducts(data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
+      setProducts(products.filter((product) => product._id !== id));
+    } catch (error) {
+      console.error('Error deleting product:', error);
+    }
   };
 
   return (
@@ -70,13 +64,13 @@ export default function AdminProducts() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {products.map((product) => (
-              <tr key={product.id}>
+              <tr key={product._id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="h-10 w-10 flex-shrink-0">
                       <img
                         className="h-10 w-10 rounded-full object-cover"
-                        src={product.image}
+                        src={`http://localhost:5000/uploads/${product.image}`}
                         alt={product.name}
                       />
                     </div>
@@ -97,11 +91,11 @@ export default function AdminProducts() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    product.status === 'Active'
+                    product.stock === 'In Stock'
                       ? 'bg-green-100 text-green-800'
                       : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {product.status}
+                    {product.stock}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -113,7 +107,7 @@ export default function AdminProducts() {
                       <Edit className="h-5 w-5" />
                     </Link>
                     <button
-                      onClick={() => handleDelete(product.id)}
+                      onClick={() => handleDelete(product._id)}
                       className="text-red-600 hover:text-red-900"
                     >
                       <Trash2 className="h-5 w-5" />

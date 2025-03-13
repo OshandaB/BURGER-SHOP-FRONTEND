@@ -2,10 +2,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Trash2 } from 'lucide-react';
+import axios from 'axios';
 
 export default function Checkout() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useStore();
   const navigate = useNavigate();
+  const { user } = useStore();
+
   const [formData, setFormData] = React.useState({
     name: '',
     email: '',
@@ -20,12 +23,38 @@ export default function Checkout() {
   const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + tax;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const orderData = {
+      userId: user?.email || null, // Replace with actual user ID if available
+      items: cart.map((item) => ({
+        productId: item.product._id,
+        quantity: item.quantity,
+      })),
+      total,
+      customerName: formData.name,
+      customerEmail: formData.email,
+      customerPhone: formData.phone,
+      address: formData.address,
+      status: 'pending', // Default status
+    };
+  
     // Handle order submission here
-    console.log('Order submitted:', { cart, formData, total });
-    clearCart();
-    navigate('/thank-you');
+    try {
+      const response = await axios.post('http://localhost:5000/api/v1/orders', orderData);
+  
+      if (response.status === 201) {
+        console.log('Order successfully placed:', response.data);
+        clearCart(); // Clear the cart after successful order
+        navigate('/thank-you');
+      }    
+      console.log('Order submitted:', { cart, formData, total });
+
+    } catch (error:any) {
+      console.error('Error placing order:', error.response?.data || error.message);
+      alert('Failed to place order. Please try again.');
+    }    
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

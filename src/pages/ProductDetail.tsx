@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Minus, Plus } from 'lucide-react';
+import { Product } from '../types';
 
 const product = {
   id: '1',
@@ -23,20 +24,40 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [quantity, setQuantity] = React.useState(1);
   const { addToCart } = useStore();
+  const [product, setProduct] = useState<Product | null>(null);
+  // Fetch product details from API
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/v1/products/${id}`);
+        if (!response.ok) throw new Error('Product not found');
+        const data = await response.json();
+        setProduct(data);
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      }
+    };
 
+    fetchProduct();
+  }, [id]);
+
+  // Handle loading state
+  if (!product) {
+    return <div className="text-center py-10 text-gray-600">Loading product...</div>;
+  }
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
   };
-
+  
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <div>
           <img
-            src={product.image}
-            alt={product.name}
+                src={`http://localhost:5000/uploads/${product.image}`}
+                alt={product.name}
             className="w-full h-[400px] object-cover rounded-lg"
           />
         </div>
@@ -45,21 +66,21 @@ export default function ProductDetail() {
           <p className="text-gray-600 mb-6">{product.description}</p>
           
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-2">Ingredients:</h3>
-            <ul className="list-disc list-inside text-gray-600">
-              {product.ingredients.map((ingredient) => (
-                <li key={ingredient}>{ingredient}</li>
-              ))}
-            </ul>
-          </div>
+  <h3 className="text-lg font-semibold mb-2">Ingredients:</h3>
+  <ul className="list-disc list-inside text-gray-600">
+    {product.ingredients.split(',').map((ingredient) => (
+      <li key={ingredient.trim()}>{ingredient.trim()}</li>
+    ))}
+  </ul>
+</div>
 
           <div className="mb-8">
             <h3 className="text-lg font-semibold mb-2">Nutritional Information:</h3>
             <div className="grid grid-cols-2 gap-4 text-gray-600">
-              <div>Calories: {product.nutritionalInfo.calories}</div>
-              <div>Protein: {product.nutritionalInfo.protein}</div>
-              <div>Carbs: {product.nutritionalInfo.carbs}</div>
-              <div>Fat: {product.nutritionalInfo.fat}</div>
+              <div>Calories: {product.calories}</div>
+              <div>Protein: {product.protein}</div>
+              <div>Carbs: {product.carbs}</div>
+              <div>Fat: {product.fat}</div>
             </div>
           </div>
 
