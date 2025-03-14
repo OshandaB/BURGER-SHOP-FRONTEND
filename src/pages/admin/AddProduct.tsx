@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Upload } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 
 // Define the Product interface
 export interface Product {
@@ -22,6 +22,7 @@ export default function AdminAddProduct() {
   const navigate = useNavigate();
     const { id } = useParams();
     const [loading, setLoading] = useState(false);
+    const [imagePreview, setImagePreview] = useState<string | null>(null); // State to hold image preview URL
 
   const [formData, setFormData] = useState({
     name: '',
@@ -42,6 +43,10 @@ export default function AdminAddProduct() {
         if (!response.ok) throw new Error('Product not found');
         const data = await response.json();
         setFormData(data);
+        if (data.image) {
+          const baseUrl = 'http://localhost:5000/uploads'; // Replace this with your server's base URL
+          setImagePreview(`${baseUrl}/${data.image}`); // Concatenate the base URL with the image path
+        }
       } catch (error) {
         console.error('Error fetching product:', error);
       }
@@ -59,12 +64,24 @@ export default function AdminAddProduct() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
       setFormData(prev => ({
         ...prev,
-        image: e.target.files![0]
+        image: file
       }));
+
+      // Set image preview URL
+      setImagePreview(URL.createObjectURL(file));
     }
   };
+  const handleRemoveImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      image: null
+    }));
+    setImagePreview(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -214,6 +231,24 @@ export default function AdminAddProduct() {
                   </p>
                 </div>
               </div>
+                    {/* Show image preview if available */}
+                    {imagePreview && (
+                <div className="mt-4 relative">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-md"
+                  />
+                  {/* Remove icon */}
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-0 right-0 p-1 text-white bg-black bg-opacity-50 rounded-full"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>

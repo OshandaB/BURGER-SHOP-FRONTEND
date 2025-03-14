@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, DollarSign, Users, ShoppingBag } from 'lucide-react';
+import axios from 'axios';
+import { Order } from '../../types';
 
 export default function AdminDashboard() {
   const stats = [
@@ -10,11 +12,28 @@ export default function AdminDashboard() {
     { name: 'Total Customers', value: '289', icon: Users, change: '+15%' },
   ];
 
-  const recentOrders = [
-    { id: '1', customer: 'John Doe', total: '$45.99', status: 'Completed', date: '2024-03-15' },
-    { id: '2', customer: 'Jane Smith', total: '$32.50', status: 'Processing', date: '2024-03-15' },
-    { id: '3', customer: 'Mike Johnson', total: '$28.75', status: 'Pending', date: '2024-03-14' },
-  ];
+  // const recentOrders = [
+  //   { id: '1', customer: 'John Doe', total: '$45.99', status: 'Completed', date: '2024-03-15' },
+  //   { id: '2', customer: 'Jane Smith', total: '$32.50', status: 'Processing', date: '2024-03-15' },
+  //   { id: '3', customer: 'Mike Johnson', total: '$28.75', status: 'Pending', date: '2024-03-14' },
+  // ];
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  useEffect(() => {
+    const fetchRecentOrders = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/v1/orders/admin',{
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        setRecentOrders(response.data); // Set recent orders data
+      } catch (error) {
+        console.error('Error fetching recent orders:', error);
+      }
+    };
+
+    fetchRecentOrders();
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -55,11 +74,11 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {recentOrders.map((order) => (
-                <tr key={order.id} className="border-b last:border-b-0">
+              {recentOrders.map((order:any) => (
+                <tr key={order._id} className="border-b last:border-b-0">
                   <td className="py-4">#{order.id}</td>
-                  <td className="py-4">{order.customer}</td>
-                  <td className="py-4">{order.total}</td>
+                  <td className="py-4">{order.customerName}</td>
+                  <td className="py-4">$ {order.total}</td>
                   <td className="py-4">
                     <span className={`px-2 py-1 rounded-full text-sm ${
                       order.status === 'Completed' ? 'bg-green-100 text-green-800' :
@@ -69,8 +88,8 @@ export default function AdminDashboard() {
                       {order.status}
                     </span>
                   </td>
-                  <td className="py-4">{order.date}</td>
-                </tr>
+                  <td className="py-4">{new Date(order.createdAt).toISOString().split('T')[0]}</td>
+                  </tr>
               ))}
             </tbody>
           </table>

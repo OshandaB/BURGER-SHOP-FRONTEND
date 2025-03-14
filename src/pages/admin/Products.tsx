@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Edit, Trash2 } from 'lucide-react';
 import { Product } from '../../types';
+import axios from 'axios';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -12,19 +13,25 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/v1/products'); // Change to your API URL
-      const data = await response.json();
-      setProducts(data);
+      const response = await axios.get('http://localhost:5000/api/v1/products');
+      setProducts(response.data); // Axios automatically parses JSON
     } catch (error) {
       console.error('Error fetching products:', error);
     }
   };
-
+  
   const handleDelete = async (id: string) => {
+    const isConfirmed = window.confirm('Are you sure you want to delete this product?');
+
+    if (!isConfirmed) return; // Stop execution if user cancels
     try {
-      await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
-      setProducts(products.filter((product) => product._id !== id));
-    } catch (error) {
+      await axios.delete(`http://localhost:5000/api/v1/products/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+            fetchProducts();
+        } catch (error) {
       console.error('Error deleting product:', error);
     }
   };

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Trash2 } from 'lucide-react';
 import axios from 'axios';
+import { loadStripe } from '@stripe/stripe-js'; // Stripe integration
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 export default function Checkout() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useStore();
@@ -63,7 +65,40 @@ export default function Checkout() {
       [e.target.name]: e.target.value
     });
   };
+  const handleStripePayment = async () => {
+    const orderData = {
+      userId: user?._id || null, // Replace with actual user ID if available
+      items: cart.map((item) => ({
+        productId: item.product._id,
+        quantity: item.quantity,
+      })),
+      total,
+      customerName: formData.name,
+      customerEmail: formData.email,
+      customerPhone: formData.phone,
+      address: formData.address,
+      status: 'pending', // Default status
+    };
+    try {
+      const response = await axios.post('http://localhost:5000/api/v1/create-checkout-session', {
+        items: cart,
+        total,
+        orderData
+      });
 
+      const { sessionId } = response.data;
+      const stripe:any = await stripePromise;
+
+      // Redirect to Stripe checkout page
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+
+      if (error) {
+        console.error('Stripe checkout error:', error);
+      }
+    } catch (error:any) {
+      console.error('Error creating checkout session:', error.message);
+    }
+  };
   if (cart.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
@@ -234,6 +269,13 @@ export default function Checkout() {
               className="w-full py-3 px-6 text-white bg-orange-600 hover:bg-orange-700 rounded-md font-semibold"
             >
               Place Order
+            </button>
+            <button
+              type="button"
+              onClick={handleStripePayment}
+              className="w-full py-3 px-6 text-white bg-orange-600 hover:bg-orange-700 rounded-md font-semibold"
+            >
+              Pay with Stripe
             </button>
           </form>
         </div>
