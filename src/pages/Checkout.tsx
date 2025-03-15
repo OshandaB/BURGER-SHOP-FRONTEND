@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Trash2 } from 'lucide-react';
@@ -7,7 +7,7 @@ import { loadStripe } from '@stripe/stripe-js'; // Stripe integration
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 export default function Checkout() {
-  const { cart, removeFromCart, updateQuantity, clearCart } = useStore();
+  const { cart, loadCart, removeFromCart, updateQuantity, clearCart, addToCart } = useStore();
   const navigate = useNavigate();
   const { user } = useStore();
 
@@ -20,7 +20,10 @@ export default function Checkout() {
     expiryDate: '',
     cvv: ''
   });
-
+  useEffect(() => {
+    loadCart();
+  }, []);
+  
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + tax;
@@ -49,7 +52,7 @@ export default function Checkout() {
       if (response.status === 201) {
         console.log('Order successfully placed:', response.data);
         clearCart(); // Clear the cart after successful order
-        navigate('/thank-you');
+        // navigate('/thank-you');
       }    
       console.log('Order submitted:', { cart, formData, total });
 
@@ -124,8 +127,8 @@ export default function Checkout() {
             {cart.map((item) => (
               <div key={item.product.id} className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow-sm">
                 <img
-                  src={item.product.image}
-                  alt={item.product.name}
+                src={`http://localhost:5000/uploads/${item.product.image}`}
+                alt={item.product.name}
                   className="w-20 h-20 object-cover rounded"
                 />
                 <div className="flex-grow">
@@ -137,11 +140,11 @@ export default function Checkout() {
                     type="number"
                     min="1"
                     value={item.quantity}
-                    onChange={(e) => updateQuantity(item.product.id, parseInt(e.target.value))}
+                    onChange={(e) => updateQuantity(item.product._id,parseInt(e.target.value))}
                     className="w-16 px-2 py-1 border rounded"
                   />
                   <button
-                    onClick={() => removeFromCart(item.product.id)}
+                    onClick={() => removeFromCart(item.product._id)}
                     className="text-red-500 hover:text-red-600"
                   >
                     <Trash2 className="h-5 w-5" />
@@ -222,7 +225,7 @@ export default function Checkout() {
                 className="w-full px-3 py-2 border rounded-md"
               />
             </div>
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Card Number
               </label>
@@ -234,8 +237,8 @@ export default function Checkout() {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border rounded-md"
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+            </div> */}
+            {/* <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Expiry Date
@@ -263,19 +266,19 @@ export default function Checkout() {
                   className="w-full px-3 py-2 border rounded-md"
                 />
               </div>
-            </div>
-            <button
+            </div> */}
+            {/* <button
               type="submit"
               className="w-full py-3 px-6 text-white bg-orange-600 hover:bg-orange-700 rounded-md font-semibold"
             >
               Place Order
-            </button>
+            </button> */}
             <button
               type="button"
               onClick={handleStripePayment}
               className="w-full py-3 px-6 text-white bg-orange-600 hover:bg-orange-700 rounded-md font-semibold"
             >
-              Pay with Stripe
+              Pay with Card
             </button>
           </form>
         </div>

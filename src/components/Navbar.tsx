@@ -1,19 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, User, Menu } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import {jwtDecode} from 'jwt-decode'; // You can use jwt-decode to decode the JWT token
 
 export default function Navbar() {
   const { cart, user, setAuthModalOpen } = useStore();
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = cart.length;
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const { isAuthenticated, email, token, setAuth, clearAuth } = useStore();
 
   useEffect(() => {
     // Check if the user is logged in and if the token exists in localStorage
     const token = localStorage.getItem('token');
-console.log(user)
     if (token) {
       try {
         setUserEmail(localStorage.getItem('email')); // Set the user email from decoded token
