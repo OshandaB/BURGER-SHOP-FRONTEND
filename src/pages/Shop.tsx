@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import axiosInstance from '../util/axiosInstance';
 import { Product } from '../types';
 
 // const products = [
@@ -39,7 +39,7 @@ export default function Shop() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/v1/products'); // Ensure this matches your backend route
+        const response = await axiosInstance.get('/products'); // Ensure this matches your backend route
         setProducts(response.data);
         console.log(response)
       } catch (error) {
@@ -76,25 +76,24 @@ export default function Shop() {
                 {product.name}
               </h3>
               <p className="text-gray-600 mb-4">{product.description}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-gray-900">
-                  ${product.price.toFixed(2)}
-                </span>
-                <div className="space-x-2">
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
-                  >
-                    Add to Cart
-                  </button>
-                  <Link
-                    to={`/product/${product.id}`}
-                    className="inline-flex items-center px-4 py-2 border border-orange-600 text-sm font-medium rounded-md text-orange-600 hover:bg-orange-50"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+  <span className="text-2xl font-bold text-gray-900">${product.price.toFixed(2)}</span>
+  <div className="flex flex-col sm:flex-row sm:space-x-2 w-full sm:w-auto space-y-2 sm:space-y-0">
+    <button
+      onClick={() => handleAddToCart(product)}
+      className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
+    >
+      Add to Cart
+    </button>
+    <Link
+      to={`/product/${product.id}`}
+      className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 border border-orange-600 text-sm font-medium rounded-md text-orange-600 hover:bg-orange-50"
+    >
+      View Details
+    </Link>
+  </div>
+</div>
+
             </div>
           </div>
         ))}

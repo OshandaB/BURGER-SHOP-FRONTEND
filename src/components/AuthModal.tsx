@@ -22,7 +22,8 @@ export default function AuthModal() {
       email,
       name: email.split('@')[0], // Example: using the part before '@' as the name
       password,
-      role: 'user', // Assuming default role based on login or sign-up
+      role: 'user',
+      _id: ''
     };
 
     try {

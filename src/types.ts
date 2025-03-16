@@ -20,6 +20,7 @@ export interface CartItem {
 }
 
 export interface Order {
+  _id: string;
   id: string;
   items: CartItem[];
   total: number;

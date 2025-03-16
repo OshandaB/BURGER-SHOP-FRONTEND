@@ -1,8 +1,25 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import axiosInstance from '../util/axiosInstance';
+import { Product } from '../types';
 
 export default function Home() {
+    const [products, setProducts] = useState<Product[]>([]);
+  
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axiosInstance.get('/products'); // Ensure this matches your backend route
+        setProducts(response.data);
+        console.log(response)
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   return (
     <div className="space-y-20">
       {/* Hero Section */}
@@ -36,34 +53,35 @@ export default function Home() {
       </section>
 
       {/* Featured Products */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-          Featured Burgers
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <img
-                src={`https://images.unsplash.com/photo-155054766${i}-d9450f859349?auto=format&fit=crop&q=80`}
-                alt={`Featured burger ${i}`}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <h3 className="text-xl font-semibold mb-2">Classic Burger {i}</h3>
-                <p className="text-gray-600 mb-4">
-                  Delicious beef patty with fresh vegetables and our special sauce
-                </p>
-                <Link
-                  to={`/product/${i}`}
-                  className="text-orange-600 hover:text-orange-700 font-medium"
-                >
-                  Learn More
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+     {/* Featured Products */}
+     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+                    Featured Burgers
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {products.slice(0, 3).map((product, index) => (
+                        <div key={product._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                            <img
+                src={`http://localhost:5000/uploads/${product.image}`}
+                alt={product.name}
+                                className="w-full h-48 object-cover"
+                            />
+                            <div className="p-4">
+                                <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
+                                <p className="text-gray-600 mb-4">
+                                    {product.description}
+                                </p>
+                                <Link
+                                    to={`/product/${product.id}`}
+                                    className="text-orange-600 hover:text-orange-700 font-medium"
+                                >
+                                    Learn More
+                                </Link>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
 
       {/* About Section */}
       <section className="bg-orange-100 py-20">

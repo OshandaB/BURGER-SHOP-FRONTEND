@@ -1,50 +1,54 @@
-import  { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, User, Menu } from 'lucide-react';
-import { useStore } from '../store/useStore';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ShoppingCart, User, Menu } from "lucide-react";
+import { useStore } from "../store/useStore";
 
 export default function Navbar() {
-  const { cart, user, setAuthModalOpen } = useStore();
+  const { cart, isAuthenticated, email, setAuthModalOpen, clearAuth, user } = useStore();
   const totalItems = cart.length;
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const { isAuthenticated, email, token, setAuth, clearAuth } = useStore();
+  const [menuOpen, setMenuOpen] = useState(false);
 
+  // Toggle menu function
+  const toggleMenu = (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent the click from triggering the document listener
+    setMenuOpen((prev) => !prev);
+  };
+
+  // Close menu when clicking outside
   useEffect(() => {
-    // Check if the user is logged in and if the token exists in localStorage
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        setUserEmail(localStorage.getItem('email')); // Set the user email from decoded token
-        console.log(userEmail)
-      } catch (error) {
-        console.error('Invalid token', error);
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!(event.target as HTMLElement)?.closest(".menu-container")) {
+        setMenuOpen(false);
       }
+    };
+
+    if (menuOpen) {
+      document.addEventListener("click", handleOutsideClick);
     }
-  }, []);
+
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  }, [menuOpen]);
+
   return (
     <nav className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-orange-600">OB Burgers</span>
-            </Link>
-          </div>
+        <div className="flex justify-between h-16 items-center">
+          {/* Logo */}
+          <Link to="/" className="text-2xl font-bold text-orange-600">OB Burgers</Link>
 
-          <div className="flex items-center space-x-4">
-            <Link to="/shop" className="text-gray-700 hover:text-orange-600">
-              Menu
-            </Link>
-            {user?.role === 'admin' && (
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link to="/shop" className="text-gray-700 hover:text-orange-600">Menu</Link>
+            {isAuthenticated && user?.role === "admin" && (
               <Link to="/admin" className="text-gray-700 hover:text-orange-600">
                 Dashboard
               </Link>
             )}
-             {isAuthenticated && email && (
-            <div className="text-gray-700 hover:text-orange-600">
-              <span className="font-medium">{email}</span> {/* Display email */}
-            </div>
-          )}
+            {isAuthenticated && email && (
+              <span className="text-gray-700">{email}</span> 
+            )}
             <Link to="/checkout" className="relative">
               <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-orange-600" />
               {totalItems > 0 && (
@@ -54,25 +58,53 @@ export default function Navbar() {
               )}
             </Link>
             {!isAuthenticated ? (
-            <button
-              onClick={() => setAuthModalOpen(true)}
-              className="flex items-center text-gray-700 hover:text-orange-600"
-            >
-              <User className="h-6 w-6" />
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                clearAuth(); // Clear token and authentication state
-
-              }}
-              className="text-gray-700 hover:text-orange-600"
-            >
-              Logout
-            </button>
-          )}
+              <button onClick={() => setAuthModalOpen(true)} className="text-gray-700 hover:text-orange-600">
+                <User className="h-6 w-6" />
+              </button>
+            ) : (
+              <button onClick={clearAuth} className="text-gray-700 hover:text-orange-600">
+                Logout
+              </button>
+            )}
           </div>
+
+          {/* Hamburger Menu */}
+          <button onClick={toggleMenu} className="md:hidden text-gray-700 hover:text-orange-600">
+            <Menu className="h-8 w-8" />
+          </button>
         </div>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div className="md:hidden menu-container absolute top-16 left-0 w-full bg-white shadow-md p-4 flex flex-col space-y-4">
+            <Link to="/shop" className="text-gray-700 hover:text-orange-600">Menu</Link>
+            {isAuthenticated && user?.role === "admin" && (
+              <Link to="/admin" className="text-gray-700 hover:text-orange-600">
+                Dashboard
+              </Link>
+            )}
+            {isAuthenticated && email && (
+              <span className="text-gray-700">{email}</span>
+            )}
+            <Link to="/checkout" className="relative flex items-center">
+              <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-orange-600" />
+              {totalItems > 0 && (
+                <span className="ml-2 bg-orange-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+            {!isAuthenticated ? (
+              <button onClick={() => setAuthModalOpen(true)} className="text-gray-700 hover:text-orange-600">
+                Login
+              </button>
+            ) : (
+              <button onClick={clearAuth} className="text-gray-700 hover:text-orange-600">
+                Logout
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Edit, Trash2 } from 'lucide-react';
 import { Product } from '../../types';
-import axios from 'axios';
+import axiosInstance from '../../util/axiosInstance'
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -13,7 +13,7 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/v1/products');
+      const response = await axiosInstance.get('/products');
       setProducts(response.data); // Axios automatically parses JSON
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -25,7 +25,7 @@ export default function AdminProducts() {
 
     if (!isConfirmed) return; // Stop execution if user cancels
     try {
-      await axios.delete(`http://localhost:5000/api/v1/products/${id}`, {
+      await axiosInstance.delete(`/products/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

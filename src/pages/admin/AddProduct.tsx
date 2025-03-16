@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
 import { Upload, X } from 'lucide-react';
+import axiosInstance from '../../util/axiosInstance'
 
 // Define the Product interface
 export interface Product {
@@ -39,12 +39,12 @@ export default function AdminAddProduct() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/v1/products/${id}`);
-        if (!response.ok) throw new Error('Product not found');
-        const data = await response.json();
+        const response = await axiosInstance.get(`/products/${id}`);
+        const data = response.data;
         setFormData(data);
+
         if (data.image) {
-          const baseUrl = 'http://localhost:5000/uploads'; // Replace this with your server's base URL
+          const baseUrl = 'http://localhost:5000/uploads'; // Replace with your server's base URL
           setImagePreview(`${baseUrl}/${data.image}`); // Concatenate the base URL with the image path
         }
       } catch (error) {
@@ -105,7 +105,7 @@ export default function AdminAddProduct() {
     try {
       if (id) {
         // Update existing product
-        await axios.put(`http://localhost:5000/api/v1/products/${id}`, productFormData, {
+        await axiosInstance.put(`/products/${id}`, productFormData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -113,7 +113,7 @@ export default function AdminAddProduct() {
         });
       } else {
         // Create new product
-        await axios.post('http://localhost:5000/api/v1/products', productFormData, {
+        await axiosInstance.post('/products', productFormData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('token')}`,

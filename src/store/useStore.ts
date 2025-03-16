@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { CartItem, Product, User } from '../types';
 import axios from 'axios';
+import axiosInstance from '../util/axiosInstance';
 
 interface Store {
   cart: CartItem[];
@@ -44,7 +45,7 @@ export const useStore = create<Store>((set, get) => {
     loadCart: async () => {
       if (get().isAuthenticated) {
         try {
-          const response = await axios.get("http://localhost:5000/api/v1/cart/", {
+          const response = await axiosInstance.get("/cart/", {
             headers: { Authorization: `Bearer ${get().token}` },
           });
           const cartItems = response.data.items; // Assuming response contains an `items` array
@@ -52,8 +53,8 @@ export const useStore = create<Store>((set, get) => {
           // Fetch product details for each item
           const productRequests = cartItems.map(async (item: any) => {
             try {
-              const productResponse = await axios.get(
-                `http://localhost:5000/api/v1/products/${item.pId}`
+              const productResponse = await axiosInstance.get(
+                `/products/${item.pId}`
               );
               return { product: productResponse.data, quantity: item.quantity };
             } catch (error) {
@@ -79,7 +80,7 @@ export const useStore = create<Store>((set, get) => {
       const { isAuthenticated, cart } = get();
       if (isAuthenticated) {
         try {
-          const response = await axios.post("http://localhost:5000/api/v1/cart/add",
+          const response = await axiosInstance.post("/cart/add",
             { productId: product._id, quantity: 1, pId: product.id },
             {
               headers: {
@@ -87,7 +88,6 @@ export const useStore = create<Store>((set, get) => {
               }
             },
           );
-          console.log("Cart updated:", response.data);
           get().loadCart();
 
         } catch (error: any) {
@@ -130,9 +130,9 @@ export const useStore = create<Store>((set, get) => {
       const { isAuthenticated, cart } = get();
 
       if (isAuthenticated) {
-        axios
+        axiosInstance
           .post(
-            "http://localhost:5000/api/v1/cart/remove",
+            "/cart/remove",
             { productId },
             { headers: { Authorization: `Bearer ${get().token}` } }
           )
@@ -140,7 +140,7 @@ export const useStore = create<Store>((set, get) => {
           .catch((error) => console.error("Error removing item:", error));
       } else {
         // Update localStorage for guests
-        const newCart = cart.filter((item) => item.product.id !== productId);
+        const newCart = cart.filter((item) => item.product._id !== productId);
         localStorage.setItem("bcart", JSON.stringify(newCart));
         set({ cart: newCart });
       }
@@ -150,8 +150,8 @@ export const useStore = create<Store>((set, get) => {
       const { isAuthenticated, cart } = get();
       if (isAuthenticated) {
         try {
-          await axios.put(
-            "http://localhost:5000/api/v1/cart/update",
+          await axiosInstance.put(
+            "/cart/update",
             { productId, quantity },
             { headers: { Authorization: `Bearer ${get().token}` } }
           );
@@ -161,7 +161,7 @@ export const useStore = create<Store>((set, get) => {
         }
       } else {
         const newCart = cart.map((item) =>
-          item.product.id === productId ? { ...item, quantity } : item
+          item.product._id === productId ? { ...item, quantity } : item
         );
         localStorage.setItem("bcart", JSON.stringify(newCart));
         set({ cart: newCart });
@@ -170,7 +170,7 @@ export const useStore = create<Store>((set, get) => {
     // clearCart: () => set({ cart: [] }),
     clearCart: () => {
       if (get().isAuthenticated) {
-        axios.post("http://localhost:5000/api/v1/cart/clear",
+        axiosInstance.post("/cart/clear",
           {},
           { headers: { Authorization: `Bearer ${get().token}` } }
         )
@@ -202,6 +202,8 @@ export const useStore = create<Store>((set, get) => {
     clearAuth: () => {
       localStorage.removeItem('email');
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
       set({ isAuthenticated: false, email: null, token: null });
     },
 

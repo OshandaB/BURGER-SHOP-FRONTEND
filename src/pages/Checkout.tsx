@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Trash2 } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '../util/axiosInstance';
 import { loadStripe } from '@stripe/stripe-js'; // Stripe integration
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -35,6 +35,8 @@ export default function Checkout() {
       userId: user?.email || null, // Replace with actual user ID if available
       items: cart.map((item) => ({
         productId: item.product._id,
+        productName: item.product.name,
+        price:  item.product.price,
         quantity: item.quantity,
       })),
       total,
@@ -47,7 +49,7 @@ export default function Checkout() {
   
     // Handle order submission here
     try {
-      const response = await axios.post('http://localhost:5000/api/v1/orders', orderData);
+      const response = await axiosInstance.post('/orders', orderData);
   
       if (response.status === 201) {
         console.log('Order successfully placed:', response.data);
@@ -73,6 +75,8 @@ export default function Checkout() {
       userId: user?._id || null, // Replace with actual user ID if available
       items: cart.map((item) => ({
         productId: item.product._id,
+        productName: item.product.name,
+        price:  item.product.price,
         quantity: item.quantity,
       })),
       total,
@@ -83,7 +87,7 @@ export default function Checkout() {
       status: 'pending', // Default status
     };
     try {
-      const response = await axios.post('http://localhost:5000/api/v1/create-checkout-session', {
+      const response = await axiosInstance.post('/create-checkout-session', {
         items: cart,
         total,
         orderData

@@ -2,12 +2,25 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import axios from 'axios';
 
 export default function ThankYou() {
     const { clearCart } = useStore();
-  
+    const sessionId = new URLSearchParams(window.location.search).get('session_id');
+
   useEffect(() => {
-    clearCart(); // Clear the cart after successful order
+          clearCart();
+
+    // axios.post(`http://localhost:5000/api/v1/orders/verify-payment?session_id=${sessionId}`)
+    //   .then(response => {
+    //     if (response.data.success) {
+    //       console.log('Order saved successfully!');
+    //       clearCart();
+    //     } else {
+    //       console.log('Payment verification failed.');
+    //     }
+    //   })
+    //   .catch(error => console.error('Error verifying payment:', error));
 
   }, []);
   return (
